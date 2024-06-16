@@ -1,16 +1,70 @@
-import { StyleSheet } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
+import { ActivityIndicator, StyleSheet, FlatList } from 'react-native';
 import { Text, View } from '@/components/Themed';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
+import BookItem from '@/components/BookItem';
+
+const query = gql`
+query SearchBooks($q: String) {
+  googleBooksSearch(q: $q, country: "US") {
+    items {
+      id
+      volumeInfo {
+        authors
+        averageRating
+        description
+        imageLinks {
+          thumbnail
+        }
+        title
+        subtitle
+        industryIdentifiers {
+          identifier
+          type
+        }
+      }
+    }
+  }
+  openLibrarySearch(q: $q) {
+    docs {
+      author_name
+      title
+      cover_edition_key
+      isbn
+    }
+  }
+}
+`;
 
 export default function TabOneScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
-    </View>
-  );
+  const {data, loading, error} = useQuery(query, {variables: {q : 'React Native'}})
+  if(loading){
+    return(
+      <ActivityIndicator/>
+    )
+  }
+  if(error){
+    return(
+      <View style={styles.container}>
+        <Text>Error while fetching Books!</Text>
+        <Text>{error.message}</Text>
+      </View>      
+    )
+  }
+  if(data){
+    return(
+      <FlatList 
+        data={data?.googleBooksSearch?.items || []}
+        renderItem={({ item }) => <BookItem book={{image: item.volumeInfo.imageLinks.thumbnail, title: item.volumeInfo.title, authors: item.volumeInfo.authors, isbn: item.volumeInfo.industryIdentifiers ? item.volumeInfo.industryIdentifiers[0]?.identifier : null}}/>}
+        showsVerticalScrollIndicator={false}
+      />
+    )
+  }
+  if(!data){
+    return (
+      <Text>Nothing to Show Here!</Text>
+    )
+  }
 }
 
 const styles = StyleSheet.create({
@@ -21,7 +75,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
   },
   separator: {
     marginVertical: 30,
