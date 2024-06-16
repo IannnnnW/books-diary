@@ -3,6 +3,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
@@ -40,20 +41,32 @@ export default function RootLayout() {
 
   if (!loaded) {
     return null;
-  }
-
+  }  
+  
   return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
+  const APIKEY : string = 'mitterwinkl::local.net+1000::dc072fe09e13d3e0019d84787bc6da802f4f62945e18f8827c31e6500c4050af'
+  
+  const client = new ApolloClient({
+    uri: 'https://mitterwinkl.eu-central-a.ibm.stepzen.net/api/eager-mandrill/__graphql',
+    headers:{
+      Authorization: `Apikey ${APIKEY}`
+    },
+    cache: new InMemoryCache()
+
+  })
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
+      <ApolloProvider client={client}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </ApolloProvider>
     </ThemeProvider>
   );
 }
