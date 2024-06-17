@@ -1,7 +1,8 @@
-import { ActivityIndicator, StyleSheet, FlatList } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, StyleSheet, FlatList, TextInput, Button } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client';
 import BookItem from '@/components/BookItem';
 
 const query = gql`
@@ -37,34 +38,29 @@ query SearchBooks($q: String) {
 `;
 
 export default function TabOneScreen() {
-  const {data, loading, error} = useQuery(query, {variables: {q : 'React Native'}})
-  if(loading){
-    return(
-      <ActivityIndicator/>
-    )
-  }
-  if(error){
-    return(
-      <View style={styles.container}>
-        <Text>Error while fetching Books!</Text>
-        <Text>{error.message}</Text>
-      </View>      
-    )
-  }
-  if(data){
-    return(
+  const [searchItem, setSearchItem] = useState('')
+  const [runQuery, {data, loading, error}] = useLazyQuery(query, {variables: {q : searchItem}})
+  return(
+    <View >
+      <View style={styles.header}>
+        <TextInput placeholder='Search...' style={styles.input} value={searchItem} onChangeText={setSearchItem}/>
+        <Button title='Search' onPress={() => runQuery({variables : {q :searchItem}})}/>
+      </View>
+      {loading && <ActivityIndicator/>}
+      {error && (
+        <View style={styles.container}>
+          <Text>Error Fetching book!</Text>
+          <Text>{error?.message}</Text>
+        </View>
+      )}
       <FlatList 
         data={data?.googleBooksSearch?.items || []}
-        renderItem={({ item }) => <BookItem book={{image: item.volumeInfo.imageLinks.thumbnail, title: item.volumeInfo.title, authors: item.volumeInfo.authors, isbn: item.volumeInfo.industryIdentifiers ? item.volumeInfo.industryIdentifiers[0]?.identifier : null}}/>}
+        renderItem={({ item }) => <BookItem book={{image: item.volumeInfo.imageLinks?.thumbnail, title: item.volumeInfo.title, authors: item.volumeInfo.authors, isbn: item.volumeInfo.industryIdentifiers?.[0]?.identifier}}/>}
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
       />
-    )
-  }
-  if(!data){
-    return (
-      <Text>Nothing to Show Here!</Text>
-    )
-  }
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -81,4 +77,16 @@ const styles = StyleSheet.create({
     height: 1,
     width: '80%',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  input :{
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "gainsboro",
+    borderRadius: 5,
+    padding: 10,
+    marginVertical: 5
+  }
 });
