@@ -3,18 +3,21 @@ import { useBooksContext } from '@/contexts/BooksContext';
 import { Pressable } from 'react-native';
 import { View, Image, Text } from 'react-native'
 import { StyleSheet } from 'react-native'
+import { useTheme } from '@react-navigation/native';
+
 type BookItemProps = {
     book :Book;
 }
 
 const BookItem = ({book} :BookItemProps)=>{
     const {isSaved, toggleIsSaved} = useBooksContext()
+    const {colors} = useTheme()
     return(
         <View style={styles.container}>
             <Image source={{ uri: book.image }} style={styles.image}/>
             <View style={styles.contentContainer}>
-                <Text style={styles.title}>{book.title}</Text>
-                <Text>by {book.authors?.join(", ")}</Text>
+                <Text style={{color: colors.text}}>{book.title}</Text>
+                <Text style={{color: colors.text}}>by {book.authors?.join(", ")}</Text>
                 <Pressable onPress={()=>toggleIsSaved(book)} style={[styles.button, isSaved(book) ? {backgroundColor: 'lightgrey'} : {}]}>
                     <Text style={styles.buttonText}>{isSaved(book) ? 'Remove' : 'Want to Read'}</Text>
                 </Pressable>

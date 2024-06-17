@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, FlatList, TextInput, Button } from 'react-native';
+import { useTheme } from '@react-navigation/native';
 import { Text, View } from '@/components/Themed';
 import { gql } from '@apollo/client';
 import { useLazyQuery } from '@apollo/client';
@@ -38,6 +39,7 @@ query SearchBooks($q: String) {
 `;
 
 export default function TabOneScreen() {
+  const {colors} = useTheme()
   const [searchItem, setSearchItem] = useState('')
   const [runQuery, {data, loading, error}] = useLazyQuery(query, {variables: {q : searchItem}})
   const [provider, setProvider] = useState("googleBooksSearch")
@@ -62,7 +64,7 @@ export default function TabOneScreen() {
   return(
     <View style={styles.outterContainer}>
       <View style={styles.header}>
-        <TextInput placeholder='Search...' style={styles.input} value={searchItem} onChangeText={setSearchItem}/>
+        <TextInput placeholder='Search...' style={[styles.input, {color: colors.text}]} value={searchItem} onChangeText={setSearchItem}/>
         <Button title='Search' onPress={() => runQuery({variables : {q :searchItem}})}/>
       </View>
       <View style={styles.tabs}>
@@ -116,8 +118,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "gainsboro",
     borderRadius: 5,
-    padding: 10,
-    marginVertical: 5
+    padding: 5,
+    margin: 5,
   },
   tabs: {
     flexDirection: 'row',

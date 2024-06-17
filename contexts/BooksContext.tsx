@@ -1,4 +1,5 @@
-import { createContext, useContext, ReactNode, useState } from "react";
+import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Props = {
     children :ReactNode
@@ -17,8 +18,13 @@ const MyBooksContext = createContext<BooksContextType>({
 })
 
 export default function BooksContext({children} :Props){
-
     const [savedBooks, setSavedBooks] = useState<Book[]>([])
+    useEffect(()=>{
+        loadData()
+    }, [])
+    useEffect(()=>{
+        persistData()
+    }, [savedBooks])
 
     function isSaved(book :Book) :boolean {
         return savedBooks.some((savedBook => JSON.stringify(savedBook) === JSON.stringify(book)))
@@ -33,7 +39,15 @@ export default function BooksContext({children} :Props){
             setSavedBooks([...savedBooks, book])
         }
     }
-
+    async function persistData() :Promise<void>{
+        await AsyncStorage.setItem("savedBooks", JSON.stringify(savedBooks))
+    }
+    async function loadData() :Promise<void>{
+        const dataItems = await AsyncStorage.getItem("savedBooks")
+        if(dataItems){
+            setSavedBooks(JSON.parse(dataItems))
+        }
+    }
     return (
         <MyBooksContext.Provider value={{isSaved, toggleIsSaved, savedBooks}}>
             {children}
