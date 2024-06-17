@@ -60,7 +60,7 @@ export default function TabOneScreen() {
   }
 
   return(
-    <View >
+    <View style={styles.outterContainer}>
       <View style={styles.header}>
         <TextInput placeholder='Search...' style={styles.input} value={searchItem} onChangeText={setSearchItem}/>
         <Button title='Search' onPress={() => runQuery({variables : {q :searchItem}})}/>
@@ -90,6 +90,10 @@ export default function TabOneScreen() {
 }
 
 const styles = StyleSheet.create({
+  outterContainer : {
+    padding: 5
+  },
+
   container: {
     flex: 1,
     alignItems: 'center',
