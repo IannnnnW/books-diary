@@ -40,11 +40,38 @@ query SearchBooks($q: String) {
 export default function TabOneScreen() {
   const [searchItem, setSearchItem] = useState('')
   const [runQuery, {data, loading, error}] = useLazyQuery(query, {variables: {q : searchItem}})
+  const [provider, setProvider] = useState("googleBooksSearch")
+
+  function parseBooks(item :any ) :Book{
+    if(provider == "googleBooksSearch"){
+      return {
+        image: item.volumeInfo.imageLinks?.thumbnail, 
+        title: item.volumeInfo.title, 
+        authors: item.volumeInfo.authors, 
+        isbn: item.volumeInfo.industryIdentifiers?.[0]?.identifier
+      }
+    }
+    return {
+      image: `https://covers.openlibrary.org/b/olid/${item.cover_edition_key}-M.jpg`,
+      title: item.title,
+      authors: item.author_name,
+      isbn: item.isbn?.[0]
+    }
+  }
+
   return(
     <View >
       <View style={styles.header}>
         <TextInput placeholder='Search...' style={styles.input} value={searchItem} onChangeText={setSearchItem}/>
         <Button title='Search' onPress={() => runQuery({variables : {q :searchItem}})}/>
+      </View>
+      <View style={styles.tabs}>
+        <Text onPress={()=>setProvider("googleBooksSearch")} style={provider == "googleBooksSearch" ? {color: 'royalblue', fontWeight: 'bold'} : {}}>
+          Google Books
+        </Text>
+        <Text onPress={()=>setProvider("openLibrarySearch")} style={provider == "openLibrarySearch" ? {color: 'royalblue', fontWeight: 'bold'} : {}}>
+          Open Library
+        </Text>
       </View>
       {loading && <ActivityIndicator/>}
       {error && (
@@ -54,9 +81,8 @@ export default function TabOneScreen() {
         </View>
       )}
       <FlatList 
-        data={data?.googleBooksSearch?.items || []}
-        renderItem={({ item }) => <BookItem book={{image: item.volumeInfo.imageLinks?.thumbnail, title: item.volumeInfo.title, authors: item.volumeInfo.authors, isbn: item.volumeInfo.industryIdentifiers?.[0]?.identifier}}/>}
-        keyExtractor={(item) => item.id}
+        data={(provider == 'googleBooksSearch' ? data?.googleBooksSearch?.items : data?.openLibrarySearch?.docs) || []}
+        renderItem={({ item }) => <BookItem book={parseBooks(item)}/>}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -88,5 +114,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginVertical: 5
+  },
+  tabs: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    margin: 10,
+    alignItems: 'center'
   }
 });
